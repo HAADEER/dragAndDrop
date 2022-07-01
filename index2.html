@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap" rel="stylesheet">
+    <style>
+        * {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: rgb(126, 184, 162);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        form {
+            width: 60%;
+            margin: 4rem auto;
+            text-align: center;
+        }
+
+        .container>div {
+            width: 20%;
+            box-shadow: 10px 14px 29px -6px rgb(50 99 83);
+            -moz-box-shadow: -2px 10px 31px -8px rgba(184, 184, 184, 1);
+
+            background-color: #fff;
+            text-align: center;
+        }
+
+        .container>div h2 {
+            padding: 20px;
+        }
+
+        .inProgress h2 {
+            background: orange;
+        }
+
+        .onHold h2 {
+            background: red;
+        }
+
+        .review h2 {
+            background: yellow
+        }
+
+        .approved h2 {
+            background: green;
+        }
+
+        ul {
+            min-height: 250px;
+            list-style: none;
+        }
+
+        li {
+            padding: 20px;
+            border: 1px solid grey;
+        }
+
+        input[type="text"] {
+            padding: 10px 20px;
+            width: 55%;
+        }
+
+        button {
+            padding: 10px 20px;
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="form">
+        <input type="text" placeholder="enter Project Name" id="inputVal">
+        <button type="button" id="insertedBtn">ADD</button>
+    </form>
+    <section class="container">
+        <div class="inProgress">
+            <h2>In Progress</h2>
+            <ul class="tasksSection" id="inProgressContainer"></ul>
+        </div>
+        <div class="onHold">
+            <h2>On Hold</h2>
+            <ul class="tasksSection"></ul>
+        </div>
+        <div class="review">
+            <h2>In Review</h2>
+            <ul class="tasksSection"></ul>
+        </div>
+        <div class="approved">
+            <h2>Approved</h2>
+            <ul class="tasksSection"></ul>
+        </div>
+    </section>
+
+    <script>
+        //get button element and set an event handler
+        var addBtn = document.getElementById("insertedBtn")
+        addBtn.addEventListener("click" , insertedValue);
+
+        //get inprogress tag element to insert data directly 
+        var inProgressContainer = document.getElementById("inProgressContainer");
+
+        //get input element to take the value of inserted data
+        var inputtedText = document.getElementById("inputVal");
+
+        //array to store the values from input element
+        var valueList = [];
+
+/* --------------------------------------------------------------------------------------------------*/        
+        //onclick function implemantation
+        function insertedValue(val){
+            val = inputtedText.value;
+            valueList.push(val);
+
+            //function that create element that hold the value i insert
+            filledElementFun(valueList);
+        }
+        function filledElementFun(valueList){
+            valueList.forEach(function(e){
+                //create element take hold value
+                var inputListItem = document.createElement("li");
+                inputListItem.innerHTML = e;
+
+                //append the element to container (inprogress div)
+                inProgressContainer.append(inputListItem);
+
+
+                //loop through the items for adding id attribute as special mark
+                //select all created element
+                var insertedItems = document.querySelectorAll("li");
+
+                //function that set unified attribute for each listItem element 
+                setAttributeFun(insertedItems);
+                })
+        }
+        function setAttributeFun(insertedItems){
+            //loop through them
+            insertedItems.forEach(function(elem , index){
+                    elem.setAttribute("id" , "listitem"+ index);
+                    elem.setAttribute('draggable', 'true')
+                }) 
+                //pass created element to apply dragstart-event for each one
+                retunedItem(insertedItems);
+        }
+        function retunedItem(insertedItems){
+            console.log(insertedItems.length);
+            for(var i=0 ; i<insertedItems.length; i++){
+            insertedItems[i].addEventListener("dragstart" , dragstartFun);
+        } 
+        }
+        function dragstartFun(e){
+            e.dataTransfer.setData("txt" , this.id);
+        }
+        //for droping the drag item
+        var containers = document.getElementsByClassName("tasksSection");
+        for(var c=0 ; c<containers.length; c++){
+            containers[c].addEventListener("dragover" , dragoverFun);
+            containers[c].addEventListener("drop" , dropFun);
+        }
+        function dragoverFun(e){
+            e.preventDefault();
+        }
+        function dropFun(e){
+            var droppeditemList = e.dataTransfer.getData("txt");
+            //console.log(droppeditemList);
+            this.append(document.getElementById(droppeditemList))//append the element
+            /*
+            get text inside the element
+            var elementsInsideContainer =  document.getElementById(droppeditemList).textContent;
+            */
+           var childArr = [];
+           //create new array to put data and store them in local storage
+            for(var c=0; c<containers.length; c++){
+                for(var l=0; l<containers[c].children.length; l++){
+                    childArr.push(containers[c].children[l].innerHTML);
+                    //console.log(containers[c].children[l].innerHTML);
+                }
+                localStorage.setItem("container" + [c+1] , childArr);
+                //console.log(localStorage.getItem("container" + [c+1] ))
+                childArr = [];
+            }
+        }
+        document.addEventListener("DOMContentLoaded" , letThings);
+        function letThings(){
+            //create object that key=container ,  value=textcontent of created element inside each container
+            var getlcStrage = {};
+            for(var c=0; c<containers.length; c++){
+                //var getlcStrage = localStorage.getItem("container" + [c+1])
+                //          key                         value
+                getlcStrage["container" + [c+1]] = localStorage.getItem("container" + [c+1])
+            }
+            console.log(getlcStrage);//object of container as property
+            //console.log(Object.values(getlcStrage))
+            var ArrOfListValues = Object.values(getlcStrage);
+            for(elem in ArrOfListValues){
+                if(ArrOfListValues[elem] != ""){
+                var getlcStorageArr = ArrOfListValues[elem].split(",");
+                console.log(getlcStorageArr);//array
+                for(item of getlcStorageArr){
+                    var inputListItem = document.createElement("li");
+                    inputListItem.setAttribute('draggable', 'true');
+                    inputListItem.innerHTML = item;
+                    var allElem = document.querySelectorAll("li");
+                    containers[elem].append(inputListItem);
+                    setAttributeFun(allElem);
+                }
+            }
+            }
+        }
+    </script>
+</body>
+</html>
